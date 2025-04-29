@@ -1,5 +1,5 @@
 # 获取当前脚本的绝对路径
-$SRC_DIR = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$SRC_DIR     = Split-Path -Parent $MyInvocation.MyCommand.Definition
 # 项目根目录
 $PROJECT_DIR = Split-Path -Parent $SRC_DIR
 
@@ -12,58 +12,48 @@ $PYTHON_CONTENT = Get-Content $PYTHON_SCRIPT -Raw
 # 提取 iteration 数值
 $ITERATION = [regex]::Match($PYTHON_CONTENT, 'iteration\s*=\s*(\d+)').Groups[1].Value
 
-# 在 PowerShell 中重新生成 date（模拟 Python 中的逻辑）
+# 生成 date（模拟 Python 中的逻辑）
 $currentTime = Get-Date
-$year = $currentTime.Year % 100
-$month = $currentTime.Month
-$day = $currentTime.Day
-$date = "$year.$month.$day"
+$year        = $currentTime.Year % 100
+$month       = $currentTime.Month
+$day         = $currentTime.Day
+$date        = "$year.$month.$day"
 
-# 根据新的规则组装 experiment_index
+# 组装 experiment_index
 $EXPERIMENT_INDEX = "${date}_${ITERATION}_iter"
 
-# 构造实验目录路径
+# 创建实验目录
 $EXPERIMENT_DIR = Join-Path (Join-Path $PROJECT_DIR "results") $EXPERIMENT_INDEX
 New-Item -ItemType Directory -Force -Path $EXPERIMENT_DIR | Out-Null
 
-# 日志文件和PID文件
+# 日志文件和 PID 文件路径
 $LOG_FILE = Join-Path $EXPERIMENT_DIR ("$EXPERIMENT_INDEX.log")
 $PID_FILE = Join-Path $EXPERIMENT_DIR ("$EXPERIMENT_INDEX.pid")
 
-# Conda环境相关
-$TARGET_ENV = "inv"
+# Conda 环境检查
+$TARGET_ENV        = "inv"
 $CURRENT_CONDA_ENV = $env:CONDA_DEFAULT_ENV
 
 if ($CURRENT_CONDA_ENV -eq $TARGET_ENV) {
-    # 后台启动Python脚本并同步写日志
-    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $startInfo.FileName = "python"
-    $startInfo.Arguments = "`"$PYTHON_SCRIPT`""
-    $startInfo.RedirectStandardOutput = $true
-    $startInfo.RedirectStandardError = $true
-    $startInfo.UseShellExecute = $false
-    $startInfo.CreateNoWindow = $true
-    $startInfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
-    $startInfo.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+    # 构造 cmd.exe 内部重定向命令
+    # stdout 重定向到 $LOG_FILE，stderr 也重定向到同一个文件
+    $innerCmd = "python `"$PYTHON_SCRIPT`" > `"$LOG_FILE`" 2>&1"
 
-    $process = New-Object System.Diagnostics.Process
-    $process.StartInfo = $startInfo
-    $process.Start() | Out-Null
+    # 启动 cmd.exe 执行上述命令，隐藏窗口，并返回 Process 对象
+    $proc = Start-Process -FilePath "cmd.exe" `
+        -ArgumentList "/c", $innerCmd `
+        -WindowStyle Hidden `
+        -PassThru
 
-    # 同步读取并写日志
-    $stdout = $process.StandardOutput.ReadToEnd()
-    $stderr = $process.StandardError.ReadToEnd()
+    # 记录运行时间和 PID
+    "RUN TIME: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - PID: $($proc.Id) - EXPERIMENT INDEX: $EXPERIMENT_INDEX" |
+        Out-File -FilePath $PID_FILE -Encoding UTF8
 
-    $stdout | Out-File -FilePath $LOG_FILE -Append
-    $stderr | Out-File -FilePath $LOG_FILE -Append
-
-    $process.WaitForExit()
-
-    # 记录PID和时间
-    $CURRENT_TIME = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "RUN TIME: $CURRENT_TIME - PID: $($process.Id) - EXPERIMENT INDEX: $EXPERIMENT_INDEX" | Out-File $PID_FILE -Encoding UTF8
-
-} else {
+    # 等待 Python 脚本退出
+    $proc.WaitForExit()
+}
+else {
+    # 错误处理：不是期望的 Conda 环境
     $errorMessage = "ERROR: Current Conda Env isn't '$TARGET_ENV', but '$CURRENT_CONDA_ENV'"
     $errorMessage | Tee-Object -FilePath $LOG_FILE -Append
     "Please use 'conda activate $TARGET_ENV'" | Tee-Object -FilePath $LOG_FILE -Append
