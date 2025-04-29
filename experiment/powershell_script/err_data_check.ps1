@@ -9,7 +9,7 @@ while ((Get-Date) -lt $endTime) {
     $totalLines = (Get-ChildItem -Path . -Recurse -Filter "*data.csv" | Get-Content | Measure-Object -Line).Lines
     Write-Output "Total lines: $totalLines"
 
-    Write-Output "--$(Get-Date -Format \"yyyy-MM-dd HH:mm:ss\")-- Check"
+    Write-Output ("--{0}-- Check" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"))
 
     Start-Sleep -Seconds 30
 }

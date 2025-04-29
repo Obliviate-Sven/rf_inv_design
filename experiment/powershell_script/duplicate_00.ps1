@@ -26,6 +26,20 @@ if (Test-Path $runAllScript) {
     Write-Host "Warning: run_all.ps1 not found in $currentScriptPath"
 }
 
+$killAllScript = Join-Path $currentScriptPath "kill_all.ps1"
+if (Test-Path $killAllScript) {
+    Copy-Item -Force $killAllScript -Destination $targetRoot
+} else {
+    Write-Host "Warning: kill_all.ps1 not found in $currentScriptPath"
+}
+
+$errCheckScript = Join-Path $currentScriptPath "err_data_check.ps1"
+if (Test-Path $errCheckScript) {
+    Copy-Item -Force $errCheckScript -Destination $targetRoot
+} else {
+    Write-Host "Warning: err_data_check.ps1 not found in $currentScriptPath"
+}
+
 # copy00 ~ copy09
 for ($i = 0; $i -le 3; $i++) {
     $destFolder = Join-Path $targetRoot ("copy0$i")

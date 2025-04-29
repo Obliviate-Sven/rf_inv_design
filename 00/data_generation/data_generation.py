@@ -1,4 +1,4 @@
-import torch
+import random
 import os
 from simulation import em_simulation
 from data_util import Input_Data, attach_ports
@@ -24,6 +24,10 @@ s34_tmp_data_file = "s34_output.csv"
 # device pixel num in width and lenth
 input_width = 16
 input_lenth = 16
+# random pixel num
+# input_range = [12, 14, 16, 18]
+# input_width = random.choice(input_range)
+# input_lenth = random.choice(input_range)
 
 start_time = time.time()
 for i in range(iteration):
@@ -34,6 +38,10 @@ for i in range(iteration):
     # device shape
     dev_w = 300
     dev_l = 300
+    # random device shape
+    # device_range = [200, 220, 240, 260, 280, 300] 
+    # dev_w = random.choice(input_range)
+    # dev_l = random.choice(input_range)
 
     em_simulation(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_mat, ports_dict, dev_w, dev_l)
     
