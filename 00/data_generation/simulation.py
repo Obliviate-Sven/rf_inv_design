@@ -13,6 +13,7 @@ def em_simulation(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_
     # check os
     system_name = platform.system().lower() 
     if system_name == "windows":
+        os.environ["ANSYSEM_ROOT232"] = r"C:\Program Files\AnsysEM\v232"
         HFSS_VERSION = "2023.2"
         NUM_CORES = 1
     elif system_name == "linux":
