@@ -16,7 +16,7 @@ experiment_index = f"{date}_{iteration}_iter"
 # path setting
 src_path = os.path.abspath(__file__) # data_generation.py
 src_dir = os.path.dirname(src_path) # data_generation
-src_dir = os.path.dirname(src_dir) # src
+# src_dir = os.path.dirname(src_dir) # src
 project_dir = os.path.dirname(src_dir)
 s12_tmp_data_file = "s12_output.csv"
 s34_tmp_data_file = "s34_output.csv"

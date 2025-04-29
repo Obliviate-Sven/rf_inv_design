@@ -31,7 +31,7 @@ def em_simulation(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_
     os.makedirs(result_dir, exist_ok=True)
     
     # set ansys params
-    NO_GUI = False
+    NO_GUI = True
     PRINT_ON = False
     
     # launch ansys simulation
