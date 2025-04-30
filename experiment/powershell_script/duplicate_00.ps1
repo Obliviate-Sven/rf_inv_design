@@ -41,7 +41,7 @@ if (Test-Path $errCheckScript) {
 }
 
 # copy00 ~ copy09
-for ($i = 0; $i -le 3; $i++) {
+for ($i = 0; $i -le 0; $i++) {
     $destFolder = Join-Path $targetRoot ("copy0$i")
     Copy-Item -Recurse -Force $sourceFolder $destFolder
 }

@@ -21,8 +21,15 @@ def attach_ports(input_mat, ports_dict):
     return input_with_ports
 
 def append_input_matrix(s_param_df, input_matrix_flat):
-    repeated_matrix = np.repeat(input_matrix_flat, len(s_param_df), axis=0)  # (M, N)
-    return pd.concat([s_param_df.reset_index(drop=True), pd.DataFrame(repeated_matrix)], axis=1)
+    M = len(s_param_df)         
+    L = input_matrix_flat.size  
+
+    repeated_matrix = np.tile(input_matrix_flat, (M, 1))
+
+    cols = [f"inp_flat_{i}" for i in range(L)]
+    flat_df = pd.DataFrame(repeated_matrix, columns=cols)
+
+    return pd.concat([s_param_df.reset_index(drop=True), flat_df], axis=1)
 
 def post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_with_ports):
     '''this function extract S params from the original output csv file, and attach input matrix into the file, 
@@ -95,10 +102,10 @@ def post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_file, expe
 def deeponet_post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_with_ports, dev_w, dev_l):
     ''' TBD '''
 
-    window_w = 300
-    window_l = 300
+    # window_w = 300
+    # window_l = 300
     
-    mesh_points = window_w * window_l
+    # mesh_points = window_w * window_l
 
     # processing input matrix
     top_bottom_flip = torch.flip(input_with_ports, dims=[0])
@@ -158,27 +165,13 @@ def deeponet_post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_f
     output_path = os.path.join(dataset_dir, output_file_name)
     
     # save labels
-    # s12_data_label.to_csv(output_path, mode='a', index=False, header=False)
-    # s12_td_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
-    # s12_lr_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
-    # s34_data_label.to_csv(output_path, mode='a', index=False, header=False)
-    # s34_td_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
-    # s34_lr_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    s12_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    s12_td_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    s12_lr_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    s34_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    s34_td_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    s34_lr_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
     
-    combined_df = pd.concat([
-        s12_data_label,
-        s12_td_enhanced_data_label,
-        s12_lr_enhanced_data_label,
-        s34_data_label,
-        s34_td_enhanced_data_label,
-        s34_lr_enhanced_data_label
-    ], axis=0)
-
-    # shuffle
-    combined_df = combined_df.sample(frac=1).reset_index(drop=True)
-
-    # save labels
-    combined_df.to_csv(output_path, mode='a', index=False, header=False)
         
     
 # x: width, y: lenth, z: thickness

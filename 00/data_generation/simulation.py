@@ -8,20 +8,20 @@ from data_util import attach_ports
 
 # x: width, y: lenth, z: thickness
 
-def em_simulation(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_mat, ports_dict, dev_w, dev_l):
+def em_simulation(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, experiment_iter, input_mat, ports_dict, dev_w, dev_l):
     '''call hfss simulation and save S params to csv files'''
     # check os
     system_name = platform.system().lower() 
     if system_name == "windows":
-        os.environ["ANSYSEM_ROOT232"] = r"C:\Program Files\AnsysEM\v232"
+        # os.environ["ANSYSEM_ROOT232"] = r"C:\Program Files\AnsysEM\v232"
         HFSS_VERSION = "2023.2"
-        NUM_CORES = 1
+        NUM_CORES = 16
     elif system_name == "linux":
         HFSS_VERSION = "2024.1"
         NUM_CORES = 1
     
-    PROJECT_NAME = os.path.basename(os.path.normpath(f"{project_dir}_{experiment_index}_project"))
-    DESIGN_NAME = os.path.basename(os.path.normpath(f"{project_dir}_{experiment_index}_design"))
+    PROJECT_NAME = os.path.basename(os.path.normpath(f"{project_dir}_{experiment_iter}_project"))
+    DESIGN_NAME = os.path.basename(os.path.normpath(f"{project_dir}_{experiment_iter}_design"))
     # SOLUTION_TYPE = "Modal"
     SOLUTION_TYPE = "Terminal"
 

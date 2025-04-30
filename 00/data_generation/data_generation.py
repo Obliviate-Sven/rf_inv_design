@@ -2,7 +2,7 @@ import random
 import os
 from simulation import em_simulation
 from data_util import Input_Data, attach_ports
-from data_util import post_data_processing
+from data_util import post_data_processing, deeponet_post_data_processing
 from plot import draw_plot
 import time
 
@@ -42,12 +42,15 @@ for i in range(iteration):
     # device_range = [200, 220, 240, 260, 280, 300] 
     # dev_w = random.choice(input_range)
     # dev_l = random.choice(input_range)
+    
+    experiment_iter = f"{experiment_index}_{i}"
 
-    em_simulation(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_mat, ports_dict, dev_w, dev_l)
+    em_simulation(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, experiment_iter, input_mat, ports_dict, dev_w, dev_l)
     
     input_with_ports = attach_ports(input_mat, ports_dict)    
 
-    post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_with_ports)
+    # post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_with_ports)
+    deeponet_post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_with_ports, dev_w, dev_l)
     
     print(f"--iteration {i} completed--")
 
