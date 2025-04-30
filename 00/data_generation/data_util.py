@@ -20,6 +20,10 @@ def attach_ports(input_mat, ports_dict):
 
     return input_with_ports
 
+def append_input_matrix(s_param_df, input_matrix_flat):
+    repeated_matrix = np.repeat(input_matrix_flat, len(s_param_df), axis=0)  # (M, N)
+    return pd.concat([s_param_df.reset_index(drop=True), pd.DataFrame(repeated_matrix)], axis=1)
+
 def post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_file, experiment_index, input_with_ports):
     '''this function extract S params from the original output csv file, and attach input matrix into the file, 
        formating the data file into dataset for training'''
@@ -119,32 +123,33 @@ def deeponet_post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_f
     s12 = pd.read_csv(os.path.join(tmp_result_dir, s12_tmp_data_file), sep=";", header=0)  
     s34 = pd.read_csv(os.path.join(tmp_result_dir, s34_tmp_data_file), sep=";", header=0)
     
-    s12_data = s12[["re(S(1,1))", "re(S(1,2))", "re(S(2,2))", "im(S(1,1))", "im(S(1,2))", "im(S(2,2))"]]
-    s34_data = s34[["re(S(3,3))", "re(S(3,4))", "re(S(4,4))", "im(S(3,3))", "im(S(3,4))", "im(S(4,4))"]]
-    s21_data = s12[["re(S(2,2))", "re(S(1,2))", "re(S(1,1))", "im(S(2,2))", "im(S(1,2))", "im(S(1,1))"]]
-    s43_data = s34[["re(S(4,4))", "re(S(3,4))", "re(S(3,3))", "im(S(4,4))", "im(S(3,4))", "im(S(3,3))"]]    
+    s12_data = s12[["Freq [GHz]", "re(S(1,1))", "re(S(1,2))", "re(S(2,2))", "im(S(1,1))", "im(S(1,2))", "im(S(2,2))"]]
+    s34_data = s34[["Freq [GHz]", "re(S(3,3))", "re(S(3,4))", "re(S(4,4))", "im(S(3,3))", "im(S(3,4))", "im(S(4,4))"]]
+    s21_data = s12[["Freq [GHz]", "re(S(2,2))", "re(S(1,2))", "re(S(1,1))", "im(S(2,2))", "im(S(1,2))", "im(S(1,1))"]]
+    s43_data = s34[["Freq [GHz]", "re(S(4,4))", "re(S(3,4))", "re(S(3,3))", "im(S(4,4))", "im(S(3,4))", "im(S(3,3))"]]    
     
-    # flatterning data into 1 line
-    s12_data_flat = s12_data.to_numpy().flatten()
-    s34_data_flat = s34_data.to_numpy().flatten()
-    s21_data_flat = s21_data.to_numpy().flatten()
-    s43_data_flat = s43_data.to_numpy().flatten()
+    s12_data_label = append_input_matrix(s12_data, input_with_ports_flat)
+    s12_td_enhanced_data_label = append_input_matrix(s12_data, top_bottom_flip_flat)
+    s12_lr_enhanced_data_label = append_input_matrix(s21_data, left_right_flip_flat)
+    s34_data_label = append_input_matrix(s34_data, rot_input_with_ports_flat)    
+    s34_td_enhanced_data_label = append_input_matrix(s34_data, rot_top_bottom_flip_flat)
+    s34_lr_enhanced_data_label = append_input_matrix(s43_data, rot_left_right_flip_flat) 
     
     # concat s params and input matrix into 1 line
-    s12_data_label = np.concatenate((s12_data_flat, input_with_ports_flat))
-    s12_td_enhanced_data_label = np.concatenate((s12_data_flat, top_bottom_flip_flat))
-    s12_lr_enhanced_data_label = np.concatenate((s21_data_flat, left_right_flip_flat))
+    # s12_data_label = np.concatenate((s12_data_flat, input_with_ports_flat))
+    # s12_td_enhanced_data_label = np.concatenate((s12_data_flat, top_bottom_flip_flat))
+    # s12_lr_enhanced_data_label = np.concatenate((s21_data_flat, left_right_flip_flat))
     
-    s34_data_label = np.concatenate((s34_data_flat, rot_input_with_ports_flat))
-    s34_td_enhanced_data_label = np.concatenate((s34_data_flat, rot_top_bottom_flip_flat))
-    s34_lr_enhanced_data_label = np.concatenate((s43_data_flat, rot_left_right_flip_flat))
+    # s34_data_label = np.concatenate((s34_data_flat, rot_input_with_ports_flat))
+    # s34_td_enhanced_data_label = np.concatenate((s34_data_flat, rot_top_bottom_flip_flat))
+    # s34_lr_enhanced_data_label = np.concatenate((s43_data_flat, rot_left_right_flip_flat))
 
-    s12_df = pd.DataFrame([s12_data_label])
-    s12_td_enhanced_df = pd.DataFrame([s12_td_enhanced_data_label])
-    s12_lr_enhanced_df = pd.DataFrame([s12_lr_enhanced_data_label])
-    s34_df = pd.DataFrame([s34_data_label])
-    s34_td_enhanced_df = pd.DataFrame([s34_td_enhanced_data_label])
-    s34_lr_enhanced_df = pd.DataFrame([s34_lr_enhanced_data_label])
+    # s12_df = pd.DataFrame([s12_data_label])
+    # s12_td_enhanced_df = pd.DataFrame([s12_td_enhanced_data_label])
+    # s12_lr_enhanced_df = pd.DataFrame([s12_lr_enhanced_data_label])
+    # s34_df = pd.DataFrame([s34_data_label])
+    # s34_td_enhanced_df = pd.DataFrame([s34_td_enhanced_data_label])
+    # s34_lr_enhanced_df = pd.DataFrame([s34_lr_enhanced_data_label])
     
     results_dir = os.path.join(project_dir, "results")
     dataset_dir = os.path.join(results_dir, experiment_index)
@@ -153,13 +158,28 @@ def deeponet_post_data_processing(project_dir, s12_tmp_data_file, s34_tmp_data_f
     output_path = os.path.join(dataset_dir, output_file_name)
     
     # save labels
-    s12_df.to_csv(output_path, mode='a', index=False, header=False)
-    s12_td_enhanced_df.to_csv(output_path, mode='a', index=False, header=False)
-    s12_lr_enhanced_df.to_csv(output_path, mode='a', index=False, header=False)
-    s34_df.to_csv(output_path, mode='a', index=False, header=False)
-    s34_td_enhanced_df.to_csv(output_path, mode='a', index=False, header=False)
-    s34_lr_enhanced_df.to_csv(output_path, mode='a', index=False, header=False)
+    # s12_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    # s12_td_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    # s12_lr_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    # s34_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    # s34_td_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
+    # s34_lr_enhanced_data_label.to_csv(output_path, mode='a', index=False, header=False)
     
+    combined_df = pd.concat([
+        s12_data_label,
+        s12_td_enhanced_data_label,
+        s12_lr_enhanced_data_label,
+        s34_data_label,
+        s34_td_enhanced_data_label,
+        s34_lr_enhanced_data_label
+    ], axis=0)
+
+    # shuffle
+    combined_df = combined_df.sample(frac=1).reset_index(drop=True)
+
+    # save labels
+    combined_df.to_csv(output_path, mode='a', index=False, header=False)
+        
     
 # x: width, y: lenth, z: thickness
 class Input_Data:
